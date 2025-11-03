@@ -74,7 +74,7 @@ private:
     template <class Itr>
     pair<string, Itr> get_next_entry(Itr it, Itr it_end, bool align) {
         /*
-        * Utility function used to get the total quanitity of order for a given price.
+        * Utility function used to get the total quantity of order for a given price.
         * The "given price" part is inferred from the corresponding order book's 
         * iterator that is passed. We increment the iterator till we see all 
         * unmatched orders in the given price, and aggregate the quantities.  
@@ -92,8 +92,36 @@ private:
         return {cell, it};
     }
 
+    enum class ValidationResult {
+        VALID,
+        INVALID_SIDE,
+        INVALID_QUANTITY,
+        INVALID_PRICE
+    };
+
+    ValidationResult validate_inputs(char side, int quantity, float price) {
+        if (side != 'B' && side != 'S') return ValidationResult::INVALID_SIDE;
+        if (quantity <= 0)              return ValidationResult::INVALID_QUANTITY;
+        if (price <= 0)                 return ValidationResult::INVALID_PRICE;
+        return ValidationResult::VALID;
+    }
+
+    string input_validation_message(ValidationResult result) {
+        switch (result) {
+            case ValidationResult::VALID:
+                return "Good";
+            case ValidationResult::INVALID_SIDE:
+                return "Side should be either \'B\' or \'S\'";
+            case ValidationResult::INVALID_QUANTITY:
+                return "Order quantity should be a positive integer";
+            case ValidationResult::INVALID_PRICE:
+                return format("Price should be a positive value >= tick size ({:.3f})", PRECISION);
+        }
+        return "Unknown validation result";
+    }
+
 public:
-    void add_order(char side, int quantity, float price, int timestamp) {
+    bool add_order(char side, int quantity, float price, int timestamp) {
         /*
         * Create a new Order (buy or sell based on "side") object with the given
         * price, quantity and timestamp. Timestamp is used to to determine 
@@ -102,14 +130,24 @@ public:
         * based on whether the buy or sell order came first.
         */
 
-        // Round price to 3 decimal places (PRECISION sets this behaviour)
-        int factor = ceil(1 / PRECISION);
-        price = static_cast<float>(floor(static_cast<double>(price) * factor) / factor);
+        // Truncate price to 3 decimal places (PRECISION sets this behaviour)
+        int scale_factor = ceil(1 / PRECISION);
+        long scaled      = static_cast<long> (price * scale_factor);
+        price            = static_cast<double>(scaled) / scale_factor;
+
+        // Validate inputs and create a new Order.
+        ValidationResult validation_result = validate_inputs(side, quantity, price);
+        if (validation_result != ValidationResult::VALID) {
+            cout << "ERROR: " << input_validation_message(validation_result) << endl;
+            return false;
+        }
         Order* order = new Order{side, quantity, price, timestamp};
 
         // Add new order to the appropriate order queue and set 
         side == 'B' ? buy_order_queue.push(order) : sell_order_queue.push(order);
         side == 'B' ? buy_order_set.insert(order) : sell_order_set.insert(order);
+
+        return true;
     }
 
     void execute_and_print_trades() {
@@ -188,7 +226,11 @@ int main() {
 
     OrderBook order_book;
     while (cin >> side >> quantity >> price) {
-        order_book.add_order(side, quantity, price, ++timestamp);
+        bool success = order_book.add_order(side, quantity, price, ++timestamp);
+        if (!success) {
+            cout << "Ignoring input. Please re-enter:" << endl;
+            continue;
+        }
         order_book.execute_and_print_trades();
         order_book.print_order_book();
     }
