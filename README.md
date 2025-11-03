@@ -29,13 +29,16 @@ add, execute and print orders/trades.
 
 ## Build Instructions
 ### Prerequisites
-Make sure you have g++ installed and it supports C++20
+Make sure you have g++ installed and it supports C++20.
 
 ### Clone the repo
+```
 git clone https://github.com/VickyakaKV/market-engine.git
 cd market-engine
+```
 
 ### Compile and run
+```
 % g++ -std=c++20 -Wall -Wextra -Wpedantic -O2 -Iinclude src/order_book.cpp app/market_engine.cpp -o market_engine
 % ./market_engine
 Enter trades in format <Side> <Quantity> <Price>
@@ -84,7 +87,7 @@ S 65 9.8
 
 BUY            |           SELL
 5@10           |          50@11
-
+```
 
 
 
