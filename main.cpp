@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include <queue>
+#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -99,10 +100,13 @@ private:
         INVALID_PRICE
     };
 
-    ValidationResult validate_inputs(char side, int quantity, float price) {
-        if (side != 'B' && side != 'S') return ValidationResult::INVALID_SIDE;
-        if (quantity <= 0)              return ValidationResult::INVALID_QUANTITY;
-        if (price <= 0)                 return ValidationResult::INVALID_PRICE;
+    ValidationResult validate_inputs(char side, string quantity, string price) {
+        if (side != 'B' && side != 'S')
+            return ValidationResult::INVALID_SIDE;
+        if (!regex_match(quantity, std::regex("^[1-9][0-9]*$")))
+            return ValidationResult::INVALID_QUANTITY;
+        if (!regex_match(price, std::regex("^[0-9]*\\.?[0-9]+$")) || stof(price) < PRECISION)
+            return ValidationResult::INVALID_PRICE;
         return ValidationResult::VALID;
     }
 
@@ -121,7 +125,7 @@ private:
     }
 
 public:
-    bool add_order(char side, int quantity, float price, int timestamp) {
+    bool add_order(char side, string quantity_str, string price_str, int timestamp) {
         /*
         * Create a new Order (buy or sell based on "side") object with the given
         * price, quantity and timestamp. Timestamp is used to to determine 
@@ -130,17 +134,20 @@ public:
         * based on whether the buy or sell order came first.
         */
 
-        // Truncate price to 3 decimal places (PRECISION sets this behaviour)
-        int scale_factor = ceil(1 / PRECISION);
-        long scaled      = static_cast<long> (price * scale_factor);
-        price            = static_cast<double>(scaled) / scale_factor;
-
         // Validate inputs and create a new Order.
-        ValidationResult validation_result = validate_inputs(side, quantity, price);
+        ValidationResult validation_result = validate_inputs(side, quantity_str, price_str);
         if (validation_result != ValidationResult::VALID) {
             cout << "ERROR: " << input_validation_message(validation_result) << endl;
             return false;
         }
+
+        // Truncate price to 3 decimal places (PRECISION sets this behaviour)
+        float price      = stof(price_str);
+        int scale_factor = ceil(1 / PRECISION);
+        long scaled      = static_cast<long> (price * scale_factor);
+        price            = static_cast<double>(scaled) / scale_factor;
+
+        int quantity = stoi(quantity_str);
         Order* order = new Order{side, quantity, price, timestamp};
 
         // Add new order to the appropriate order queue and set 
@@ -218,8 +225,7 @@ public:
 int main() {
     cout << "Enter trades in format <Side> <Quantity> <Price>" << endl;
     char side;
-    int quantity;
-    float price;
+    string quantity, price;
     // We could have the actual UTC seconds since epoch value here. 
     // For now, using just a counter for simplicity.
     int timestamp = 0;  
