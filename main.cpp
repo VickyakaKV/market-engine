@@ -11,9 +11,9 @@
 #include <vector>
 using namespace std;
 
-size_t COLUMN_WIDTH      = 15; // Used to display Order book columns - BUY and SELL
-string ORDER_BOOK_HEADER = "BUY            |           SELL"; 
-float  PRECISION         = 0.001f; // Ignoring anything after 3 decimal places in stock price
+const size_t COLUMN_WIDTH      = 15; // Used to display Order book columns - BUY and SELL
+const string ORDER_BOOK_HEADER = "BUY            |           SELL";
+const float  PRECISION         = 0.001f; // Ignoring anything after 3 decimal places in stock price
 
 
 struct Order {
@@ -94,6 +94,7 @@ private:
     }
 
     enum class ValidationResult {
+        /* The four horsemen of invalid input */
         VALID,
         INVALID_SIDE,
         INVALID_QUANTITY,
@@ -101,6 +102,10 @@ private:
     };
 
     ValidationResult validate_inputs(char side, string quantity, string price) {
+        /*
+        Returns the result of input validation.
+        If there are several invalidities in the input, the first of them is reported.
+        */
         if (side != 'B' && side != 'S')
             return ValidationResult::INVALID_SIDE;
         if (!regex_match(quantity, std::regex("^[1-9][0-9]*$")))
@@ -111,6 +116,9 @@ private:
     }
 
     string input_validation_message(ValidationResult result) {
+        /*
+        Returns a human-readable message corresponding to the validation result.
+        */
         switch (result) {
             case ValidationResult::VALID:
                 return "Good";
