@@ -90,4 +90,25 @@ BUY            |           SELL
 ```
 
 
+## Alternate implementation 
+main.cpp implements the same OrderBook using a priority_queue and a set which share pointers to Order objects.
+ - This approach is inefficient compared to the current approach if orders accumulate at the same price.
+ - This approach is slightly more effective when there enters a huge order on one side that gets matched with
+   dozens of orders on the other side.
 
+Compile and run like earlier
+```
+market-engine % g++ -std=c++20 main.cpp
+market-engine % ./a.out
+Enter trades in format <Side> <Quantity> <Price>
+B 40 10
+BUY            |           SELL
+40@10          |               
+B 60 10
+BUY            |           SELL
+100@10         |               
+S 100 9.8
+40@10
+60@10
+BUY            |           SELL
+```
