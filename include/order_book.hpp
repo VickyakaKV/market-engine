@@ -1,3 +1,14 @@
+/*
+* Defines the OrderBook class for managing market orders.
+*
+* OrderBook maintains active buy and sell orders, matching them according to price-time priority.
+* It exposes functions to add new orders, execute trades and display the order book.
+*
+* Usage:
+*   OrderBook order_book;
+*   order_book.add_order('B', "50", "10.39", 1730764173);
+*/
+
 #include <iostream>
 #include <map>
 #include <queue>
@@ -17,9 +28,9 @@ struct Order {
     char side;
     long quantity;
     long price;
-    int timestamp;
+    long timestamp;
 
-    Order (char s, long q, long p, int t) : side(s), quantity(q), price(p), timestamp(t) {} 
+    Order (char s, long q, long p, long t) : side(s), quantity(q), price(p), timestamp(t) {} 
 };
 
 class OrderBook {
@@ -64,7 +75,7 @@ public:
     *
     * @return: true if the order was added to the book successfully, false otherwise.
     */
-    bool add_order(char side, string quantity_str, string price_str, int timestamp);
+    bool add_order(char side, string quantity_str, string price_str, long timestamp);
 
     /*
     * Match the highest bid with the least ask and print the corresponding trades in sequence.

@@ -1,3 +1,15 @@
+/*
+* Implementation of OrderBook class
+*
+* Notes:
+* - Using two ordered maps - one that maintains a queue of unmatched orders,
+    the other which maintains the total volume of unmatched orders.
+* - Matching happens automatically when the max bid exceeds the min ask.
+*
+* Improvements:
+* - A single multi-map that stores both the queue and the total volume.
+*/
+
 #include "order_book.hpp"
 #include <iostream>
 #include <algorithm>
@@ -50,7 +62,7 @@ string input_validation_message(ValidationResult result) {
 }
 
 
-bool OrderBook::add_order(char side, string quantity_str, string price_str, int timestamp) {
+bool OrderBook::add_order(char side, string quantity_str, string price_str, long timestamp) {
 
     // Validate inputs and create a new Order.
     ValidationResult validation_result = validate_inputs(side, quantity_str, price_str);
@@ -63,7 +75,7 @@ bool OrderBook::add_order(char side, string quantity_str, string price_str, int 
     long price    = static_cast<long> (stof(price_str) * SCALE_FACTOR);
     long quantity = stol(quantity_str);
     
-    // Add new order to the appropriate order queue and set 
+    // Add new order to the appropriate map and update total volume at the order price.
     side == 'B' ? buy_orders[price].emplace_back(side, quantity, price, timestamp) 
                 : sell_orders[price].emplace_back(side, quantity, price, timestamp);  
     
@@ -106,7 +118,11 @@ void OrderBook::execute_and_print_trades() {
         if (best_buy_order.quantity == 0) {
             buy_orders.rbegin()->second.pop_front();
             if (total_buy_orders_at_price[buy_order_price] == 0) {
+                // Make sure both data structures are consistent.
+                // Total volume of orders at price is 0 => then the queue of orders at that price should be empty.
                 assert(buy_orders[buy_order_price].empty());
+
+                // Remove from both maps.
                 total_buy_orders_at_price.erase(buy_order_price);
                 buy_orders.erase(buy_order_price);
             }
@@ -114,7 +130,11 @@ void OrderBook::execute_and_print_trades() {
         if (best_sell_order.quantity == 0) {
             sell_orders.begin()->second.pop_front();
             if (total_sell_orders_at_price[sell_order_price] == 0) {
+                // Make sure both data structures are consistent.
+                // Total volume of orders at price is 0 => then the queue of orders at that price should be empty.
                 assert(sell_orders[sell_order_price].empty());
+
+                //Remove from both maps
                 total_sell_orders_at_price.erase(sell_order_price);
                 sell_orders.erase(sell_order_price);
             }

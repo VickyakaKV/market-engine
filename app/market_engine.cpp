@@ -13,7 +13,7 @@ int main() {
     string quantity, price;
     // We could have the actual UTC seconds since epoch value here. 
     // For now, using just a counter for simplicity.
-    int timestamp = 0;  
+    long timestamp = 0;
 
     OrderBook order_book;
     while (cin >> side >> quantity >> price) {
@@ -24,5 +24,6 @@ int main() {
         }
         order_book.execute_and_print_trades();
         order_book.print_order_book();
+        cout << endl;
     }
 }
