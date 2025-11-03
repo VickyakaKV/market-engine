@@ -39,8 +39,8 @@ cd market-engine
 
 ### Compile and run
 ```
-% g++ -std=c++20 -Wall -Wextra -Wpedantic -O2 -Iinclude src/order_book.cpp app/market_engine.cpp -o market_engine
-% ./market_engine
+market-engine % g++ -std=c++20 -Wall -Wextra -Wpedantic -O2 -Iinclude src/order_book.cpp app/market_engine.cpp -o market_engine
+market-engine % ./market_engine
 Enter trades in format <Side> <Quantity> <Price>
 B 40 10
 
